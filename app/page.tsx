@@ -83,11 +83,6 @@ export default function AssessmentPage() {
       if (patientInfo.patientId !== nextId) {
         setPatientInfo(prev => ({ ...prev, patientId: nextId }));
       }
-    } else if (patientInfo.patientType === 'existing') {
-      // Clear ID ONLY if it currently looks like an auto-generated one
-      if (patientInfo.patientId.startsWith('VIN')) {
-        setPatientInfo(prev => ({ ...prev, patientId: '' }));
-      }
     }
   }, [patientInfo.patientType, allRecords, recordsLoaded, patientInfo.patientId]);
 

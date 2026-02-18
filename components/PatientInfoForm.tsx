@@ -70,8 +70,11 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 relative">
                 {/* Child Name */}
                 <div className="flex flex-col relative">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between">
+                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between items-center">
                         <span>Child Name <span className="text-[#B91C1C]">*</span></span>
+                        {patientInfo.patientType === 'existing' && patientInfo.childName && (
+                            <span className="text-[9px] text-[#1E3A8A] italic">Linked</span>
+                        )}
                     </label>
                     <input
                         type="text"
@@ -106,8 +109,11 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
 
                 {/* Patient ID - Sequential */}
                 <div className="flex flex-col relative">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
-                        Patient ID <span className="text-[#B91C1C]">*</span>
+                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between items-center">
+                        <span>Patient ID <span className="text-[#B91C1C]">*</span></span>
+                        {patientInfo.patientType === 'existing' && patientInfo.patientId && (
+                            <span className="text-[9px] text-[#1E3A8A] italic">Linked</span>
+                        )}
                     </label>
                     <input
                         type="text"
@@ -229,7 +235,17 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                                 type="radio"
                                 name="patientType"
                                 checked={patientInfo.patientType === 'new'}
-                                onChange={() => onChange({ ...patientInfo, patientType: 'new' })}
+                                onChange={() => {
+                                    onChange({
+                                        childName: '',
+                                        patientId: '',
+                                        dob: '',
+                                        age: '',
+                                        gender: '',
+                                        ageLevel: patientInfo.ageLevel,
+                                        patientType: 'new'
+                                    });
+                                }}
                                 className="hidden"
                             />
                             <span className="text-[13px] font-bold uppercase tracking-wider">New Patient</span>
@@ -240,7 +256,17 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                                 type="radio"
                                 name="patientType"
                                 checked={patientInfo.patientType === 'existing'}
-                                onChange={() => onChange({ ...patientInfo, patientType: 'existing' })}
+                                onChange={() => {
+                                    onChange({
+                                        childName: '',
+                                        patientId: '',
+                                        dob: '',
+                                        age: '',
+                                        gender: '',
+                                        ageLevel: patientInfo.ageLevel,
+                                        patientType: 'existing'
+                                    });
+                                }}
                                 className="hidden"
                             />
                             <span className="text-[13px] font-bold uppercase tracking-wider">Existing</span>
