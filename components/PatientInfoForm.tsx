@@ -81,20 +81,23 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                             setNameSearch(e.target.value);
                             setShowNameSuggestions(true);
                         }}
-                        onBlur={() => setTimeout(() => setShowNameSuggestions(false), 200)}
+                        onBlur={() => setShowNameSuggestions(false)}
                         placeholder="Enter full name"
                         className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] transition-all"
                     />
                     {showNameSuggestions && nameSuggestions.length > 0 && (
-                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5">
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5 max-h-60 overflow-y-auto">
                             {nameSuggestions.map((p, i) => (
                                 <div
                                     key={i}
-                                    onClick={() => handleSelectPatient(p)}
-                                    className="px-3 py-2 hover:bg-[#F3F4F6] cursor-pointer border-b border-[#D1D5DB] last:border-0"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault(); // Prevent input onBlur
+                                        handleSelectPatient(p);
+                                    }}
+                                    className="px-3 py-2.5 hover:bg-[#1E3A8A] hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
                                 >
-                                    <p className="text-sm font-bold text-[#111827]">{p.Child_Name}</p>
-                                    <p className="text-[10px] text-[#6B7280]">ID: {p.Patient_ID}</p>
+                                    <p className="text-sm font-bold text-[#111827] group-hover:text-white">{p.Child_Name}</p>
+                                    <p className="text-[10px] text-[#6B7280] group-hover:text-white/80">ID: {p.Patient_ID}</p>
                                 </div>
                             ))}
                         </div>
@@ -114,8 +117,13 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                             setIdSearch(e.target.value);
                             setShowIdSuggestions(true);
                         }}
-                        onFocus={() => patientInfo.patientType === 'existing' && setShowIdSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowIdSuggestions(false), 200)}
+                        onFocus={() => {
+                            if (patientInfo.patientType === 'existing') {
+                                setShowIdSuggestions(true);
+                                setIdSearch(patientInfo.patientId); // Allow seeing suggestions for current ID if any
+                            }
+                        }}
+                        onBlur={() => setShowIdSuggestions(false)}
                         readOnly={patientInfo.patientType === 'new'}
                         placeholder={patientInfo.patientType === 'new' ? "Generating..." : "Enter ID (e.g. VIN100)"}
                         className={`w-full px-3 py-2.5 text-[14px] font-semibold border rounded-sm outline-none transition-all ${patientInfo.patientType === 'new'
@@ -124,15 +132,18 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                             }`}
                     />
                     {showIdSuggestions && idSuggestions.length > 0 && (
-                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5">
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5 max-h-60 overflow-y-auto">
                             {idSuggestions.map((p, i) => (
                                 <div
                                     key={i}
-                                    onClick={() => handleSelectPatient(p)}
-                                    className="px-3 py-2 hover:bg-[#F3F4F6] cursor-pointer border-b border-[#D1D5DB] last:border-0"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault(); // Prevent input onBlur
+                                        handleSelectPatient(p);
+                                    }}
+                                    className="px-3 py-2.5 hover:bg-[#1E3A8A] hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
                                 >
-                                    <p className="text-sm font-bold text-[#1E3A8A]">{p.Patient_ID}</p>
-                                    <p className="text-[10px] text-[#6B7280]">Name: {p.Child_Name}</p>
+                                    <p className="text-sm font-bold text-[#111827] group-hover:text-white">{p.Patient_ID}</p>
+                                    <p className="text-[10px] text-[#6B7280] group-hover:text-white/80">Name: {p.Child_Name}</p>
                                 </div>
                             ))}
                         </div>
