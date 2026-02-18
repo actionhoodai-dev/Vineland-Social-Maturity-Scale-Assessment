@@ -160,7 +160,7 @@ function HistoryItem({ record, isExpanded, onToggle }: { record: AssessmentRecor
             age: record.Age || '',
             gender: record.Gender || '',
             ageLevel: record.Age_Level || '',
-            assessmentDate: record.Assessment_Date || '',
+            assessmentDate: record.Timestamp || record.Assessment_Date || '',
             patientId: record.Patient_ID || '',
             responses,
         });
