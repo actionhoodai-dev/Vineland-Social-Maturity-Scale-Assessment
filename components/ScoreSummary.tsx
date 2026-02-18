@@ -43,7 +43,7 @@ export default function ScoreSummary({ responses }: Props) {
                             {cat}:
                         </span>
                         <span className="text-sm font-bold text-[#1E3A8A]">
-                            {categoryTotals[cat]}
+                            {Number(categoryTotals[cat]).toFixed(1).replace(/\.0$/, '')}
                         </span>
                     </div>
                 ))}
@@ -51,7 +51,9 @@ export default function ScoreSummary({ responses }: Props) {
                 {/* Grand Total */}
                 <div className="sm:col-span-2 lg:col-span-4 flex justify-between items-center px-4 py-3 bg-[#1E3A8A] mt-2">
                     <span className="text-xs font-bold uppercase tracking-[0.1em] text-white">Grand Total Assessment Score:</span>
-                    <span className="text-lg font-bold text-white">{grandTotal}</span>
+                    <span className="text-lg font-bold text-white">
+                        {Number(grandTotal).toFixed(1).replace(/\.0$/, '')}
+                    </span>
                 </div>
             </div>
         </section>

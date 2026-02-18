@@ -68,8 +68,8 @@ export default function AssessmentTable({ responses, onToggle, ageLevel }: Props
                                 <td className="px-3 py-2 border border-[#D1D5DB] text-center text-[11px] font-medium text-[#1E3A8A] tracking-wide">
                                     {item.category}
                                 </td>
-                                <td className="px-3 py-2 border border-[#D1D5DB] text-center font-medium text-[#111827]">
-                                    {item.score}
+                                <td className="px-3 py-2 border border-[#D1D5DB] text-center font-medium text-[#1E3A8A]">
+                                    {Number(item.score).toFixed(1).replace(/\.0$/, '')}
                                 </td>
                                 <td className="px-3 py-2 border border-[#D1D5DB] text-center">
                                     <ToggleButton achieved={item.achieved} onClick={() => onToggle(index)} />
@@ -92,7 +92,7 @@ export default function AssessmentTable({ responses, onToggle, ageLevel }: Props
                         </div>
                         <p className="text-[13px] text-[#111827] leading-snug">{item.skill}</p>
                         <div className="flex justify-between items-center border-t border-[#D1D5DB] pt-2 mt-1">
-                            <span className="text-xs text-[#374151]">Score: <strong>{item.score}</strong></span>
+                            <span className="text-xs text-[#374151]">Score Weight: <strong className="text-[#1E3A8A]">{Number(item.score).toFixed(1).replace(/\.0$/, '')}</strong></span>
                             <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-medium text-[#374151]">Achieved:</span>
                                 <ToggleButton achieved={item.achieved} onClick={() => onToggle(index)} />

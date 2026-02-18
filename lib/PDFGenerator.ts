@@ -94,7 +94,7 @@ export function generateAssessmentPDF(data: PDFData): void {
         (i + 1).toString(),
         r.skill || '',
         r.category || '',
-        String(r.score || 0),
+        String(Number(r.score || 0).toFixed(1).replace(/\.0$/, '')),
         r.achieved ? 'Yes' : 'No',
     ]);
 
@@ -148,11 +148,11 @@ export function generateAssessmentPDF(data: PDFData): void {
         data.responses.forEach((r) => {
             if (r.category === cat && r.achieved) catTotal += r.score || 0;
         });
-        scoreSummary.push([cat, CATEGORY_NAMES[cat], catTotal.toString()]);
+        scoreSummary.push([cat, CATEGORY_NAMES[cat] || cat, Number(catTotal).toFixed(1).replace(/\.0$/, '')]);
         grandTotal += catTotal;
     });
 
-    scoreSummary.push(['', 'Grand Total', grandTotal.toString()]);
+    scoreSummary.push(['', 'Grand Total', Number(grandTotal).toFixed(1).replace(/\.0$/, '')]);
 
     autoTable(doc, {
         startY: y,
