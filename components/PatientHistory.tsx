@@ -1,82 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { AssessmentRecord, AssessmentResponse, CATEGORY_CODES, CategoryCode } from '@/types';
-import { fetchAllRecords } from '@/lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { AssessmentRecord, AssessmentResponse } from '@/types';
 import { generateAssessmentPDF } from '@/lib/PDFGenerator';
 import { formatDateOnly, formatDateTime } from '@/utils/dateFormatter';
 
+interface Props {
+    allRecords: AssessmentRecord[];
+}
+
 /**
- * PatientHistory — Search, view, and download previous assessments
+ * PatientHistory — Search, view, and download previous assessments with dynamic filtering
  */
-export default function PatientHistory() {
+export default function PatientHistory({ allRecords }: Props) {
     const [searchType, setSearchType] = useState<'patientId' | 'patientName'>('patientId');
     const [searchValue, setSearchValue] = useState('');
-    const [results, setResults] = useState<AssessmentRecord[]>([]);
-    const [searching, setSearching] = useState(false);
-    const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState<'empty' | 'warning' | 'info'>('info');
-    const [showResults, setShowResults] = useState(false);
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-    /** Execute search */
-    const handleSearch = async () => {
-        if (!searchValue.trim()) {
-            setMessage(`Please enter a ${searchType === 'patientId' ? 'Patient ID' : 'Patient Name'}.`);
-            setMessageType('info');
-            return;
-        }
+    // Dynamic filtering
+    const filteredResults = useMemo(() => {
+        const term = searchValue.trim().toLowerCase();
+        if (!term) return [];
 
-        setSearching(true);
-        setMessage('');
-        setShowResults(false);
-        setExpandedIndex(null);
-
-        try {
-            const allData = await fetchAllRecords();
-            let filtered: AssessmentRecord[] = [];
-
+        return allRecords.filter((r) => {
             if (searchType === 'patientId') {
-                const sTerm = searchValue.trim().toLowerCase();
-                filtered = allData.filter((r) => {
-                    const pid = (r.Patient_ID || (r as any).patient_id || '').toString().trim().toLowerCase();
-                    return pid === sTerm;
-                });
+                const pid = (r.Patient_ID || (r as any).patient_id || '').toString().toLowerCase();
+                return pid.includes(term);
             } else {
-                const sTerm = searchValue.trim().toLowerCase();
-                filtered = allData.filter((r) => {
-                    const name = (r.Child_Name || (r as any).child_name || '').toString().trim().toLowerCase();
-                    return name.includes(sTerm);
-                });
-
-                if (filtered.length > 0) {
-                    const uniqueIds = new Set(filtered.map((r) => r.Patient_ID || (r as any).patient_id).filter(Boolean));
-                    if (uniqueIds.size > 1) {
-                        setMessage('Multiple patients with same name found. Use Patient ID to distinguish.');
-                        setMessageType('warning');
-                    }
-                }
+                const name = (r.Child_Name || (r as any).child_name || '').toString().toLowerCase();
+                return name.includes(term);
             }
+        });
+    }, [allRecords, searchValue, searchType]);
 
-            if (filtered.length === 0) {
-                setMessage('No records found for this patient.');
-                setMessageType('empty');
-            } else {
-                setResults(filtered);
-                setShowResults(true);
-            }
-        } catch (err) {
-            setMessage(`Server Error: ${(err as Error).message}`);
-            setMessageType('info');
-        } finally {
-            setSearching(false);
-        }
-    };
-
-    /** Toggle inline detail view */
-    const toggleDetail = (index: number) => {
-        setExpandedIndex(expandedIndex === index ? null : index);
-    };
+    // Clear search when changing type
+    useEffect(() => {
+        setExpandedIndex(null);
+    }, [searchType]);
 
     return (
         <section className="bg-white border border-[#D1D5DB] p-4 md:p-5 mb-4 shadow-sm">
@@ -89,13 +49,13 @@ export default function PatientHistory() {
                 {/* Search Type Toggle */}
                 <div className="flex gap-2">
                     <button
-                        onClick={() => { setSearchType('patientId'); setSearchValue(''); }}
+                        onClick={() => setSearchType('patientId')}
                         className={`flex-1 py-2 text-[11px] font-bold uppercase tracking-wider border rounded-sm transition-all ${searchType === 'patientId' ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white' : 'bg-white border-[#D1D5DB] text-[#374151]'}`}
                     >
                         Search by ID
                     </button>
                     <button
-                        onClick={() => { setSearchType('patientName'); setSearchValue(''); }}
+                        onClick={() => setSearchType('patientName')}
                         className={`flex-1 py-2 text-[11px] font-bold uppercase tracking-wider border rounded-sm transition-all ${searchType === 'patientName' ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white' : 'bg-white border-[#D1D5DB] text-[#374151]'}`}
                     >
                         Search by Name
@@ -103,46 +63,49 @@ export default function PatientHistory() {
                 </div>
 
                 {/* Input area */}
-                <div className="flex flex-col md:flex-row gap-3">
+                <div className="relative">
                     <input
                         type="text"
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        placeholder={searchType === 'patientId' ? 'Enter ID (e.g. VIN100)' : 'Enter child name'}
-                        className="flex-1 px-4 py-3 text-[14px] text-[#111827] bg-[#F9FAFB] border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                        placeholder={searchType === 'patientId' ? 'Start typing ID (e.g. VIN100)' : 'Start typing child name...'}
+                        className="w-full px-4 py-3 text-[14px] text-[#111827] bg-[#F9FAFB] border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
                     />
-                    <button
-                        type="button"
-                        onClick={handleSearch}
-                        disabled={searching}
-                        className="px-8 py-3 bg-[#1E3A8A] text-white text-[13px] font-bold uppercase tracking-widest rounded-sm hover:bg-[#1a3278] disabled:bg-[#9CA3AF] transition-all"
-                    >
-                        {searching ? 'Loading...' : 'Search'}
-                    </button>
+                    {searchValue && (
+                        <button
+                            onClick={() => setSearchValue('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#6B7280] uppercase hover:text-[#B91C1C]"
+                        >
+                            Clear
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Status Message */}
-            {message && (
-                <div className={`text-center p-3 text-[13px] mb-4 border rounded-sm ${messageType === 'warning' ? 'bg-[#FFFBEB] border-[#F59E0B] text-[#92400E]' : 'bg-white border-[#D1D5DB] text-[#374151]'}`}>
-                    {message}
-                </div>
-            )}
-
             {/* Results List (Responsive) */}
-            {showResults && (
-                <div className="space-y-4">
-                    {results.map((record, idx) => (
-                        <HistoryItem
-                            key={idx}
-                            record={record}
-                            isExpanded={expandedIndex === idx}
-                            onToggle={() => toggleDetail(idx)}
-                        />
-                    ))}
-                </div>
-            )}
+            <div className="space-y-4">
+                {searchValue && filteredResults.length === 0 && (
+                    <div className="text-center p-8 bg-[#F9FAFB] border border-dashed border-[#D1D5DB] text-[#6B7280] text-sm italic">
+                        No matching records found for "{searchValue}"
+                    </div>
+                )}
+
+                {filteredResults.map((record, idx) => (
+                    <HistoryItem
+                        key={idx}
+                        record={record}
+                        isExpanded={expandedIndex === idx}
+                        onToggle={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
+                    />
+                ))}
+
+                {!searchValue && (
+                    <div className="text-center p-12 opacity-40">
+                        <div className="w-12 h-12 border-4 border-[#1E3A8A] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#1E3A8A]">Type to search patient history</p>
+                    </div>
+                )}
+            </div>
         </section>
     );
 }

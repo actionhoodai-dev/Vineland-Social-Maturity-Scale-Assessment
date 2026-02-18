@@ -1,50 +1,121 @@
 'use client';
 
-import { PatientInfo, AGE_LEVEL_OPTIONS } from '@/types';
+import { useState, useMemo } from 'react';
+import { PatientInfo, AGE_LEVEL_OPTIONS, AssessmentRecord } from '@/types';
 
 interface Props {
     patientInfo: PatientInfo;
     onChange: (info: PatientInfo) => void;
+    records: AssessmentRecord[];
 }
 
 /**
- * PatientInfoForm — Child information section with two-column layout
+ * PatientInfoForm — Child information section with dynamic search for existing patients
  */
-export default function PatientInfoForm({ patientInfo, onChange }: Props) {
+export default function PatientInfoForm({ patientInfo, onChange, records }: Props) {
+    const [nameSearch, setNameSearch] = useState('');
+    const [idSearch, setIdSearch] = useState('');
+    const [showIdSuggestions, setShowIdSuggestions] = useState(false);
+    const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+
     const update = (field: keyof PatientInfo, value: string) => {
         onChange({ ...patientInfo, [field]: value });
     };
 
+    // Filter unique patients for search
+    const uniquePatients = useMemo(() => {
+        const map = new Map<string, AssessmentRecord>();
+        records.forEach(r => {
+            if (r.Patient_ID) map.set(r.Patient_ID, r);
+        });
+        return Array.from(map.values());
+    }, [records]);
+
+    // Dynamic suggestions
+    const idSuggestions = useMemo(() => {
+        if (!idSearch.trim() || patientInfo.patientType === 'new') return [];
+        return uniquePatients.filter(p =>
+            p.Patient_ID?.toLowerCase().includes(idSearch.toLowerCase())
+        ).slice(0, 5);
+    }, [idSearch, uniquePatients, patientInfo.patientType]);
+
+    const nameSuggestions = useMemo(() => {
+        if (!nameSearch.trim() || patientInfo.patientType === 'new') return [];
+        return uniquePatients.filter(p =>
+            p.Child_Name?.toLowerCase().includes(nameSearch.toLowerCase())
+        ).slice(0, 5);
+    }, [nameSearch, uniquePatients, patientInfo.patientType]);
+
+    const handleSelectPatient = (p: AssessmentRecord) => {
+        onChange({
+            ...patientInfo,
+            childName: p.Child_Name || '',
+            patientId: p.Patient_ID || '',
+            dob: p.DOB ? new Date(p.DOB).toISOString().split('T')[0] : '', // Try to prepopulate DOB
+            gender: p.Gender || '',
+            age: p.Age || '',
+        });
+        setIdSearch('');
+        setNameSearch('');
+        setShowIdSuggestions(false);
+        setShowNameSuggestions(false);
+    };
+
     return (
-        <section className="bg-white border border-[#D1D5DB] p-4 md:p-5 mb-4 shadow-sm">
+        <section className="bg-white border border-[#D1D5DB] p-4 md:p-5 mb-4 shadow-sm overflow-visible">
             <h3 className="text-sm font-semibold text-[#1E3A8A] uppercase tracking-wide pb-2 border-b-2 border-[#1E3A8A] mb-4">
                 Child Information
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 relative">
                 {/* Child Name */}
-                <div className="flex flex-col">
+                <div className="flex flex-col relative">
                     <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between">
                         <span>Child Name <span className="text-[#B91C1C]">*</span></span>
                     </label>
                     <input
                         type="text"
                         value={patientInfo.childName}
-                        onChange={(e) => update('childName', e.target.value)}
+                        onChange={(e) => {
+                            update('childName', e.target.value);
+                            setNameSearch(e.target.value);
+                            setShowNameSuggestions(true);
+                        }}
+                        onBlur={() => setTimeout(() => setShowNameSuggestions(false), 200)}
                         placeholder="Enter full name"
                         className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] transition-all"
                     />
+                    {showNameSuggestions && nameSuggestions.length > 0 && (
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5">
+                            {nameSuggestions.map((p, i) => (
+                                <div
+                                    key={i}
+                                    onClick={() => handleSelectPatient(p)}
+                                    className="px-3 py-2 hover:bg-[#F3F4F6] cursor-pointer border-b border-[#D1D5DB] last:border-0"
+                                >
+                                    <p className="text-sm font-bold text-[#111827]">{p.Child_Name}</p>
+                                    <p className="text-[10px] text-[#6B7280]">ID: {p.Patient_ID}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Patient ID - Sequential */}
-                <div className="flex flex-col">
+                <div className="flex flex-col relative">
                     <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
                         Patient ID <span className="text-[#B91C1C]">*</span>
                     </label>
                     <input
                         type="text"
                         value={patientInfo.patientId}
-                        onChange={(e) => update('patientId', e.target.value)}
+                        onChange={(e) => {
+                            update('patientId', e.target.value);
+                            setIdSearch(e.target.value);
+                            setShowIdSuggestions(true);
+                        }}
+                        onFocus={() => patientInfo.patientType === 'existing' && setShowIdSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowIdSuggestions(false), 200)}
                         readOnly={patientInfo.patientType === 'new'}
                         placeholder={patientInfo.patientType === 'new' ? "Generating..." : "Enter ID (e.g. VIN100)"}
                         className={`w-full px-3 py-2.5 text-[14px] font-semibold border rounded-sm outline-none transition-all ${patientInfo.patientType === 'new'
@@ -52,6 +123,20 @@ export default function PatientInfoForm({ patientInfo, onChange }: Props) {
                             : 'bg-white border-[#D1D5DB] text-[#111827] focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]'
                             }`}
                     />
+                    {showIdSuggestions && idSuggestions.length > 0 && (
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5">
+                            {idSuggestions.map((p, i) => (
+                                <div
+                                    key={i}
+                                    onClick={() => handleSelectPatient(p)}
+                                    className="px-3 py-2 hover:bg-[#F3F4F6] cursor-pointer border-b border-[#D1D5DB] last:border-0"
+                                >
+                                    <p className="text-sm font-bold text-[#1E3A8A]">{p.Patient_ID}</p>
+                                    <p className="text-[10px] text-[#6B7280]">Name: {p.Child_Name}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {patientInfo.patientType === 'new' && (
                         <span className="text-[10px] text-[#1E3A8A] mt-1 font-medium italic">Auto-calculated based on existing records</span>
                     )}
@@ -137,6 +222,7 @@ export default function PatientInfoForm({ patientInfo, onChange }: Props) {
                                 className="hidden"
                             />
                             <span className="text-[13px] font-bold uppercase tracking-wider">New Patient</span>
+                            {patientInfo.patientType === 'new' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-3 p-3 border rounded-sm cursor-pointer transition-all ${patientInfo.patientType === 'existing' ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white' : 'bg-white border-[#D1D5DB] text-[#374151] hover:border-[#1E3A8A]'}`}>
                             <input
@@ -147,6 +233,7 @@ export default function PatientInfoForm({ patientInfo, onChange }: Props) {
                                 className="hidden"
                             />
                             <span className="text-[13px] font-bold uppercase tracking-wider">Existing</span>
+                            {patientInfo.patientType === 'existing' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                         </label>
                     </div>
                 </div>

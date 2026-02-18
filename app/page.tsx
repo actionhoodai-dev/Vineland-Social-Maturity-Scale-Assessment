@@ -234,13 +234,17 @@ export default function AssessmentPage() {
 
         {activeView === 'create' ? (
           <div className="space-y-4">
-            <PatientInfoForm patientInfo={patientInfo} onChange={setPatientInfo} />
+            <PatientInfoForm
+              patientInfo={patientInfo}
+              onChange={setPatientInfo}
+              records={allRecords}
+            />
             <AssessmentTable responses={responses} onToggle={handleToggleAchievement} ageLevel={patientInfo.ageLevel} />
             {responses.length > 0 && <ScoreSummary responses={responses} />}
             <SubmitSection status={status} message={message} generatedPatientId="" onSubmit={handleFormSubmit} onDownloadPDF={handleDownloadPDF} />
           </div>
         ) : (
-          <PatientHistory />
+          <PatientHistory allRecords={allRecords} />
         )}
 
         {/* Desktop Footer */}
