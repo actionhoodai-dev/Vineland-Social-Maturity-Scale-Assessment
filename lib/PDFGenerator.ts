@@ -68,7 +68,7 @@ export function generateAssessmentPDF(data: PDFData): void {
         ['Age', data.age ? `${data.age} years` : 'N/A'],
         ['Gender', data.gender || 'N/A'],
         ['Age Level', getAgeLevelLabel(data.ageLevel) || data.ageLevel || 'N/A'],
-        ['Assessment Date', formatDateOnly(data.assessmentDate)],
+        ['Assessment Date & Time', formatDateTime(data.assessmentDate)],
         ['Patient ID', data.patientId || data.generatedPatientId || 'N/A'],
     ];
 
