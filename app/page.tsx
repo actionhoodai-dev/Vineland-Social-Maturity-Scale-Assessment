@@ -8,7 +8,8 @@ import {
   AssessmentRecord,
 } from '@/types';
 import { VSMS_DATA } from '@/data/vsms-data';
-import { generateNextPatientId, formatDate } from '@/utils/helpers';
+import { generateNextPatientId } from '@/utils/helpers';
+import { formatDateOnly, formatDateTime } from '@/utils/dateFormatter';
 import { submitAssessment, fetchAllRecords } from '@/lib/api';
 import { generateAssessmentPDF } from '@/lib/PDFGenerator';
 
@@ -143,17 +144,20 @@ export default function AssessmentPage() {
     setMessage('Submitting to clinical database...');
 
     try {
-      const today = formatDate(new Date());
+      const now = new Date();
+      const isoDate = now.toISOString();
+      const displayDate = formatDateOnly(now);
+
       const payload: AssessmentSubmission = {
         ...patientInfo,
-        assessmentDate: today,
+        assessmentDate: isoDate,
         responses: responses,
       };
 
       await submitAssessment(payload);
 
       setStatus('success');
-      setMessage(`Assessment successfully submitted for ${patientInfo.childName}. ID: ${patientInfo.patientId}`);
+      setMessage(`Assessment successfully submitted for ${patientInfo.childName}. ID: ${patientInfo.patientId} (Date: ${displayDate})`);
 
       // Refresh records after successful submission to update ID pool
       loadRecords();
@@ -164,10 +168,10 @@ export default function AssessmentPage() {
   };
 
   const handleDownloadPDF = () => {
-    const today = formatDate(new Date());
+    const now = new Date();
     generateAssessmentPDF({
       ...patientInfo,
-      assessmentDate: today,
+      assessmentDate: now.toISOString(),
       responses: responses,
     });
   };

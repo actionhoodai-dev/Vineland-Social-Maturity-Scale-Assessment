@@ -1,30 +1,6 @@
 /**
- * Date and utility helpers
+ * Logic utility helpers (ID generation, Labels)
  */
-
-/** Format a Date to DD/MM/YYYY */
-export function formatDate(date: Date): string {
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
-}
-
-/** Format a Date to DD/MM/YYYY HH:MM:SS */
-export function formatDateTime(date: Date): string {
-    const hh = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    return `${formatDate(date)} ${hh}:${min}:${ss}`;
-}
-
-/** Format a Date to YYYYMMDD for filenames */
-export function formatDateForFile(date: Date): string {
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    return `${yyyy}${mm}${dd}`;
-}
 
 /** Generate the next sequential patient ID starting from VIN100 */
 export function generateNextPatientId(existingIds: string[]): string {

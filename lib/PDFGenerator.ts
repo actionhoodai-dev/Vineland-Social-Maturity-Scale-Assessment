@@ -6,7 +6,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AssessmentResponse, CATEGORY_CODES, CATEGORY_NAMES, CategoryCode } from '@/types';
-import { formatDateTime, formatDateForFile, getAgeLevelLabel } from '@/utils/helpers';
+import { getAgeLevelLabel } from '@/utils/helpers';
+import { formatDateOnly, formatDateTime, formatDateForFile } from '@/utils/dateFormatter';
 
 interface PDFData {
     childName: string;
@@ -63,11 +64,11 @@ export function generateAssessmentPDF(data: PDFData): void {
 
     const details: [string, string][] = [
         ['Child Name', data.childName || 'N/A'],
-        ['Date of Birth', data.dob || 'N/A'],
+        ['Date of Birth', formatDateOnly(data.dob)],
         ['Age', data.age ? `${data.age} years` : 'N/A'],
         ['Gender', data.gender || 'N/A'],
         ['Age Level', getAgeLevelLabel(data.ageLevel) || data.ageLevel || 'N/A'],
-        ['Assessment Date', data.assessmentDate || 'N/A'],
+        ['Assessment Date', formatDateOnly(data.assessmentDate)],
         ['Patient ID', data.patientId || data.generatedPatientId || 'N/A'],
     ];
 

@@ -1,12 +1,12 @@
 'use client';
 
-import { formatDate } from '@/utils/helpers';
+import { formatDateOnly } from '@/utils/dateFormatter';
 
 /**
  * Header — Institution title, assessment name, and current date
  */
 export default function Header() {
-    const today = formatDate(new Date());
+    const today = formatDateOnly(new Date());
 
     return (
         <header className="bg-white border border-[#D1D5DB] px-8 pt-6 pb-4 mb-4">

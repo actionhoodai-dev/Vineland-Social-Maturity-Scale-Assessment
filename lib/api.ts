@@ -19,8 +19,29 @@ export async function submitAssessment(data: AssessmentSubmission): Promise<void
 
 /** Fetch all patient records via GET */
 export async function fetchAllRecords(): Promise<AssessmentRecord[]> {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    if (Array.isArray(data)) return data;
-    return [];
+    try {
+        const response = await fetch(API_URL, {
+            method: 'GET',
+            redirect: 'follow', // Crucial for Google Apps Script redirects
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Search Results:', data);
+
+        if (Array.isArray(data)) {
+            return data;
+        } else if (data && typeof data === 'object' && Array.isArray((data as any).records)) {
+            // Handle case where data might be wrapped in a 'records' key
+            return (data as any).records;
+        }
+
+        return [];
+    } catch (err) {
+        console.error('API Fetch Error:', err);
+        return [];
+    }
 }

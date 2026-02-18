@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AssessmentRecord, AssessmentResponse, CATEGORY_CODES, CategoryCode } from '@/types';
 import { fetchAllRecords } from '@/lib/api';
 import { generateAssessmentPDF } from '@/lib/PDFGenerator';
+import { formatDateOnly, formatDateTime } from '@/utils/dateFormatter';
 
 /**
  * PatientHistory — Search, view, and download previous assessments
@@ -36,15 +37,20 @@ export default function PatientHistory() {
             let filtered: AssessmentRecord[] = [];
 
             if (searchType === 'patientId') {
-                filtered = allData.filter((r) => r.Patient_ID === searchValue.trim());
+                const sTerm = searchValue.trim().toLowerCase();
+                filtered = allData.filter((r) => {
+                    const pid = (r.Patient_ID || (r as any).patient_id || '').toString().trim().toLowerCase();
+                    return pid === sTerm;
+                });
             } else {
-                const searchLower = searchValue.trim().toLowerCase();
-                filtered = allData.filter(
-                    (r) => r.Child_Name && r.Child_Name.toLowerCase().includes(searchLower)
-                );
+                const sTerm = searchValue.trim().toLowerCase();
+                filtered = allData.filter((r) => {
+                    const name = (r.Child_Name || (r as any).child_name || '').toString().trim().toLowerCase();
+                    return name.includes(sTerm);
+                });
 
                 if (filtered.length > 0) {
-                    const uniqueIds = new Set(filtered.map((r) => r.Patient_ID).filter(Boolean));
+                    const uniqueIds = new Set(filtered.map((r) => r.Patient_ID || (r as any).patient_id).filter(Boolean));
                     if (uniqueIds.size > 1) {
                         setMessage('Multiple patients with same name found. Use Patient ID to distinguish.');
                         setMessageType('warning');
@@ -167,10 +173,15 @@ function HistoryItem({ record, isExpanded, onToggle }: { record: AssessmentRecor
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-[#1E3A8A]">{record.Patient_ID || 'NO-ID'}</span>
-                        <span className="text-[10px] bg-[#F3F4F6] px-1.5 py-0.5 border border-[#D1D5DB] text-[#374151] font-bold">{record.Assessment_Date}</span>
+                        <span className="text-[10px] bg-[#F3F4F6] px-1.5 py-0.5 border border-[#D1D5DB] text-[#374151] font-bold">
+                            {formatDateOnly(record.Assessment_Date)}
+                        </span>
                     </div>
                     <h4 className="text-[15px] font-bold text-[#111827]">{record.Child_Name || 'Unknown Child'}</h4>
-                    <p className="text-[11px] text-[#374151] uppercase tracking-wider font-medium">Age Level: {record.Age_Level || 'N/A'}</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        <p className="text-[11px] text-[#374151] uppercase tracking-wider font-medium">Age Level: {record.Age_Level || 'N/A'}</p>
+                        <p className="text-[10px] text-[#6B7280] font-medium italic">Submitted: {formatDateTime(record.Timestamp)}</p>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 sm:self-center">
@@ -192,8 +203,8 @@ function HistoryItem({ record, isExpanded, onToggle }: { record: AssessmentRecor
                 <div className="p-4 border-t border-[#D1D5DB] bg-[#F9FAFB] animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <InfoBox label="Gender" value={record.Gender} />
-                        <InfoBox label="DOB" value={record.DOB} />
-                        <InfoBox label="Age" value={record.Age} />
+                        <InfoBox label="DOB" value={formatDateOnly(record.DOB)} />
+                        <InfoBox label="Assessment Date" value={formatDateOnly(record.Assessment_Date)} />
                         <InfoBox label="Total Score" value={record.Grand_Total} isHighlight />
                     </div>
 
