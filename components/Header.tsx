@@ -1,12 +1,12 @@
 'use client';
 
-import { formatDateOnly } from '@/utils/dateFormatter';
+import { formatDateTime } from '@/utils/dateFormatter';
 
 /**
  * Header — Institution title, assessment name, and current date
  */
 export default function Header() {
-    const today = formatDateOnly(new Date());
+    const today = formatDateTime(new Date());
 
     return (
         <header className="bg-white border border-[#D1D5DB] px-8 pt-6 pb-4 mb-4">
@@ -29,7 +29,7 @@ export default function Header() {
 
             {/* Date */}
             <div className="text-right text-xs text-[#374151]">
-                Assessment Date: <span className="font-medium text-[#111827]">{today}</span>
+                Assessment Date &amp; Time: <span className="font-medium text-[#111827]">{today}</span>
             </div>
         </header>
     );
