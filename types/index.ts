@@ -106,7 +106,6 @@ export const CATEGORY_CODES: CategoryCode[] = ['SHG', 'SHE', 'SHD', 'SD', 'OCC',
 /** Age level options for the dropdown */
 export const AGE_LEVEL_OPTIONS = [
     { value: '0-1', label: '0–1' },
-    { value: '1-2', label: 'I–II' },
     { value: '2-3', label: 'II–III' },
     { value: '3-4', label: 'III–IV' },
     { value: '4-5', label: 'IV–V' },

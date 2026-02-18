@@ -29,11 +29,6 @@ export const VSMS_DATA: VSMSDataMap = {
             { id: 17, skill: 'Follows simple instructions', category: 'COM', score: 10.8 },
             { id: 18, skill: 'Walks about room unattended', category: 'LOC', score: 10.8 },
             { id: 19, skill: 'Marks with pencil or crayon', category: 'OCC', score: 10.8 },
-        ],
-    },
-    '1-2': {
-        label: 'I–II',
-        items: [
             { id: 20, skill: 'Masticates (chews) solid or semi-solid food', category: 'SHE', score: 14.4 },
             { id: 21, skill: 'Removes shoes or sandals, pulls off socks', category: 'SHD', score: 10.8 },
             { id: 22, skill: 'Transfers objects', category: 'OCC', score: 19.2 },
