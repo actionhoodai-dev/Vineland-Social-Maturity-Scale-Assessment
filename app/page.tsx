@@ -88,6 +88,15 @@ export default function AssessmentPage() {
 
   // --- ASSESSMENT LOGIC ---
 
+  const handlePatientInfoChange = (info: PatientInfo) => {
+    setPatientInfo(info);
+    if (status !== 'idle' && status !== 'submitting') {
+      setStatus('idle');
+      setMessage('');
+      setLastPayload(null);
+    }
+  };
+
   // When age level changes, populate the table
   useEffect(() => {
     if (patientInfo.ageLevel && VSMS_DATA[patientInfo.ageLevel]) {
@@ -101,18 +110,21 @@ export default function AssessmentPage() {
     } else {
       setResponses([]);
     }
-
-    if (status !== 'idle' && status !== 'submitting') {
-      setStatus('idle');
-      setMessage('');
-    }
   }, [patientInfo.ageLevel]);
 
   const handleToggleAchievement = (index: number) => {
     const next = [...responses];
     next[index].achieved = !next[index].achieved;
     setResponses(next);
+
+    if (status !== 'idle' && status !== 'submitting') {
+      setStatus('idle');
+      setMessage('');
+      setLastPayload(null);
+    }
   };
+
+  const [lastPayload, setLastPayload] = useState<AssessmentSubmission | null>(null);
 
   const handleFormSubmit = async () => {
     if (!patientInfo.childName.trim()) {
@@ -151,8 +163,23 @@ export default function AssessmentPage() {
 
       await submitAssessment(payload);
 
+      // Track last payload for PDF download before clearing
+      setLastPayload(payload);
+
+      // Full Form Reset
+      setPatientInfo({
+        childName: '',
+        dob: '',
+        age: '',
+        gender: '',
+        ageLevel: '',
+        patientType: patientInfo.patientType, // Keep the same type (new or existing)
+        patientId: '', // Will be re-calculated for 'new' by useEffect
+      });
+      setResponses([]);
+
       setStatus('success');
-      setMessage(`Assessment successfully submitted for ${patientInfo.childName}. ID: ${patientInfo.patientId} (Date: ${displayDate})`);
+      setMessage(`Assessment successfully submitted for ${payload.childName}. ID: ${payload.patientId} (Date: ${displayDate})`);
 
       // Refresh records after successful submission to update ID pool
       loadRecords();
@@ -163,6 +190,16 @@ export default function AssessmentPage() {
   };
 
   const handleDownloadPDF = () => {
+    // If we just submitted, use that data (even if form is since cleared)
+    if (lastPayload) {
+      generateAssessmentPDF({
+        ...lastPayload,
+        assessmentDate: lastPayload.assessmentDate,
+      });
+      return;
+    }
+
+    // Otherwise use current form state
     const now = new Date();
     generateAssessmentPDF({
       ...patientInfo,
@@ -231,7 +268,7 @@ export default function AssessmentPage() {
           <div className="space-y-4">
             <PatientInfoForm
               patientInfo={patientInfo}
-              onChange={setPatientInfo}
+              onChange={handlePatientInfoChange}
               records={allRecords}
             />
             <AssessmentTable responses={responses} onToggle={handleToggleAchievement} ageLevel={patientInfo.ageLevel} />
