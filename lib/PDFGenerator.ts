@@ -3,12 +3,11 @@ import autoTable from 'jspdf-autotable';
 import {
     AssessmentSubmission,
     CATEGORY_NAMES,
-    CATEGORY_CODES,
-    CategoryCode
+    CATEGORY_CODES
 } from '@/types';
 
 /**
- * PDFGenerator — Professional Clinical Documentation Generator (Navy Theme)
+ * PDFGenerator — Authorized Institutional Performance Report
  */
 export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     const doc = new jsPDF();
@@ -34,35 +33,36 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
 
     const formattedDate = formatDateProfessional(data.assessmentDate);
 
-    // --- CLINIC HEADER ---
+    // --- AUTHORIZED CLINIC HEADER ---
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
+    doc.setFontSize(22);
     doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
     doc.text('OCCUPATIONAL THERAPY FOUNDATION', 105, 20, { align: 'center' });
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 80, 80);
-    doc.text('Erode, Tamil Nadu | Clinical Assessment Documentation System', 105, 26, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(50, 50, 50);
+    doc.text('36/7, AGILMEDU STREET – 4, SAIT COLONY, ERODE – 638001 | TAMIL NADU, INDIA', 105, 26, { align: 'center' });
+    doc.text('Phone: +91 94437 12345 | Email: info@otfoundation.in', 105, 30, { align: 'center' });
 
     doc.setDrawColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.setLineWidth(0.8);
-    doc.line(20, 32, 190, 32);
+    doc.setLineWidth(1);
+    doc.line(20, 34, 190, 34);
 
-    // --- PATIENT DOCUMENTATION SECTION ---
+    // --- REPORT TITLE ---
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.text('PATIENT RECORD DETAILS', 20, 42);
+    doc.text('VINELAND SOCIAL MATURITY SCALE - ASSESSMENT REPORT', 105, 43, { align: 'center' });
 
+    // --- PATIENT RECORD DETAILS ---
     autoTable(doc, {
-        startY: 45,
+        startY: 48,
         theme: 'plain',
         body: [
-            ['Patient ID:', data.patientId, 'Assessment ID:', data.assessmentId || 'N/A'],
-            ['Child Name:', data.childName.toUpperCase(), 'Assessment Date:', formattedDate],
-            ['Date of Birth:', data.dob || 'Not Provided', 'Chronological Age:', data.age ? `${data.age} Years` : 'Not Provided'],
-            ['Gender:', (data.gender || 'Not Provided').toUpperCase(), 'Therapist Name:', (data.therapistName || 'Not Provided').toUpperCase()]
+            ['Patient ID:', data.patientId, 'Assessment Date:', formattedDate],
+            ['Child Name:', data.childName.toUpperCase(), 'Chronological Age:', data.age ? `${data.age} Years` : 'Not Provided'],
+            ['Date of Birth:', data.dob || 'Not Provided', 'Gender:', (data.gender || 'Not Provided').toUpperCase()],
+            ['Therapist:', (data.therapistName || 'Institutional Record').toUpperCase(), '', '']
         ],
         styles: { fontSize: 9, cellPadding: 2, textColor: [0, 0, 0] },
         columnStyles: {
@@ -74,97 +74,86 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
 
     let y = (doc as any).lastAutoTable.finalY + 12;
 
-    // --- SKILL TABLES PER AGE BLOCK ---
+    // --- PROGRESSIVE EVALUATION DATA ---
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.text('PROGRESSIVE SKILL EVALUATION', 15, y);
-    y += 4;
+    doc.text('PROGRESSIVE SKILL EVALUATION DATA', 15, y);
+    y += 5;
 
-    // Group responses by age block for the PDF
     const ageBlocks = Array.from(new Set(data.responses.map(r => r.ageBlock)));
 
     ageBlocks.forEach((blockName) => {
         const blockSkills = data.responses.filter(r => r.ageBlock === blockName);
 
-        // Only show attempted blocks (where at least one skill is YES or NO)
-        const hasAttempted = blockSkills.some(r => r.response !== 'NOT TESTED');
-        if (!hasAttempted) return;
+        // Show blocks that were evaluated
+        const hasEvaluated = blockSkills.some(r => r.response !== 'NOT TESTED');
+        if (!hasEvaluated) return;
 
-        // Header for Block
         autoTable(doc, {
             startY: y,
             theme: 'striped',
-            head: [[`AGE LEVEL: ${blockName}`]],
+            head: [[`AGE LEVEL BLOCK: ${blockName}`]],
             styles: { fillColor: navyColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
             margin: { left: 15, right: 15 }
         });
 
         y = (doc as any).lastAutoTable.finalY;
 
-        // Skill Table for this block
         const tableBody = blockSkills.map(r => [
-            `#${r.id}`,
+            r.response === 'YES' ? 'Tick' : `${r.id}`, // Mark SR NO with Tick if YES
             r.skill,
             r.category,
             Number(r.weightage).toFixed(1).replace(/\.0$/, ''),
-            r.response === 'YES' ? 'Tick' : '', // We'll replace 'Tick' with the symbol below
+            r.response === 'YES' ? 'X' : '',
             r.response === 'NO' ? 'O' : '',
-            r.response === 'NOT TESTED' ? 'NOT TESTED' : ''
+            r.response === 'NOT TESTED' ? 'X' : ''
         ]);
 
         autoTable(doc, {
             startY: y,
-            head: [['ID', 'SKILL DESCRIPTION', 'DOMAIN', 'SCORE', 'YES', 'NO', 'N. TESTED']],
+            head: [['S.NO', 'SKILL DESCRIPTION', 'DOMAIN', 'MARKS', 'YES', 'NO', 'NOT TESTED']],
             body: tableBody,
             theme: 'grid',
             styles: { fontSize: 7, cellPadding: 2, lineWidth: 0.1, textColor: [0, 0, 0], font: 'helvetica' },
             headStyles: { fillColor: [240, 240, 240], textColor: navyColor, fontStyle: 'bold', lineWidth: 0.1 },
             columnStyles: {
-                0: { cellWidth: 10, fontStyle: 'bold' },
+                0: { cellWidth: 10, fontStyle: 'bold', halign: 'center' },
                 1: { cellWidth: 95 },
                 2: { cellWidth: 15, halign: 'center' },
                 3: { cellWidth: 15, halign: 'center' },
-                4: { cellWidth: 15, halign: 'center', font: 'zapfdingbats' }, // For checkmarks
-                5: { cellWidth: 15, halign: 'center' },
-                6: { cellWidth: 15, halign: 'center' }
+                4: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
+                5: { cellWidth: 12, halign: 'center' },
+                6: { cellWidth: 20, halign: 'center' }
             },
-            // Custom draw to replace text with tick marks
             didDrawCell: (data) => {
-                if (data.section === 'body' && data.column.index === 4 && data.cell.text[0] === 'Tick') {
-                    // Draw a checkmark using lines for better accuracy than ZapfDingbats in some viewers
+                // If it's the S.NO column and the value is 'Tick', draw an actual tick
+                if (data.section === 'body' && data.column.index === 0 && data.cell.text[0] === 'Tick') {
                     const cell = data.cell;
                     const x = cell.x + cell.width / 2;
                     const y = cell.y + cell.height / 2;
                     doc.setDrawColor(navyColor[0], navyColor[1], navyColor[2]);
                     doc.setLineWidth(0.4);
-                    doc.line(x - 1.5, y, x - 0.5, y + 1);
-                    doc.line(x - 0.5, y + 1, x + 1.5, y - 1.5);
-                    data.cell.text = ['']; // Clear the placeholder text
+                    // Draw tick mark
+                    doc.line(x - 1.5, y, x - 0.5, y + 1.2);
+                    doc.line(x - 0.5, y + 1.2, x + 2, y - 1.5);
+                    data.cell.text = ['']; // Clear the text
                 }
             },
             margin: { left: 15, right: 15 }
         });
 
         y = (doc as any).lastAutoTable.finalY + 5;
-
-        // Add new page if needed
-        if (y > 260) {
-            doc.addPage();
-            y = 20;
-        }
+        if (y > 270) { doc.addPage(); y = 20; }
     });
 
     // --- SUMMARY SECTION ---
-    if (y > 230) {
-        doc.addPage();
-        y = 20;
-    }
+    if (y > 230) { doc.addPage(); y = 20; }
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.text('DOMAIN-WISE SCORE ACCUMULATION SUMMARY', 20, y);
+    doc.text('DOMAIN-WISE PERFORMANCE SUMMARY', 20, y);
     y += 5;
 
     const summaryData = CATEGORY_CODES.map(cat => [
@@ -175,7 +164,7 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
 
     autoTable(doc, {
         startY: y,
-        head: [['CODE', 'DOMAIN DESCRIPTION', 'ACCUMULATED SCORE']],
+        head: [['CODE', 'DEVELOPMENTAL DOMAIN', 'CUMULATIVE SCORE']],
         body: summaryData,
         theme: 'grid',
         styles: { fontSize: 9, cellPadding: 3, textColor: [0, 0, 0] },
@@ -187,7 +176,7 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
         margin: { left: 45, right: 45 }
     });
 
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = (doc as any).lastAutoTable.finalY + 12;
 
     // --- GRAND TOTAL ---
     doc.setFillColor(navyColor[0], navyColor[1], navyColor[2]);
@@ -195,24 +184,8 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('GRAND TOTAL ASSESSMENT SCORE:', 50, y + 8);
+    doc.text('TOTAL CUMULATIVE ASSESSMENT SCORE:', 50, y + 8);
     doc.text(Number(data.overallTotal).toFixed(1).replace(/\.0$/, ''), 155, y + 8, { align: 'right' });
-
-    // --- SIGNATURES ---
-    y += 35;
-    if (y > 270) { doc.addPage(); y = 40; }
-
-    doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.setFontSize(9);
-    doc.line(20, y, 70, y);
-    doc.text('Therapist Signature', 20, y + 5);
-    doc.setFont('helvetica', 'bold');
-    doc.text((data.therapistName || '_________________').toUpperCase(), 20, y + 10);
-
-    doc.line(140, y, 190, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Clinical In-Charge', 140, y + 5);
-    doc.text('Occupational Therapy Foundation', 140, y + 10);
 
     // --- FOOTER ---
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -221,9 +194,8 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
         doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
-        doc.text('This is a computer-generated clinical report and requires professional interpretation.', 105, 290, { align: 'center' });
+        doc.text('This is a system-generated clinical evaluation report from Occupational Therapy Foundation.', 105, 290, { align: 'center' });
     }
 
-    // Save PDF
-    doc.save(`${data.patientId}_Assessment_${data.childName.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`${data.patientId}_VSMS_Report_${data.childName.replace(/\s+/g, '_')}.pdf`);
 };

@@ -125,7 +125,7 @@ export default function PatientHistory({ allRecords }: Props) {
                 <table className="w-full border-collapse text-left min-w-[800px]">
                     <thead className="bg-[#F9FAFB] border-b border-[#D1D5DB]">
                         <tr>
-                            <th className="px-6 py-5 text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider border-r border-[#D1D5DB]">Identifier</th>
+                            <th className="px-6 py-5 text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider border-r border-[#D1D5DB]">Case Record</th>
                             <th className="px-6 py-5 text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider border-r border-[#D1D5DB]">Profile Metadata</th>
                             <th className="px-6 py-5 text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider border-r border-[#D1D5DB] text-center">Outcome</th>
                             <th className="px-6 py-5 text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider border-r border-[#D1D5DB]">Recorded At</th>
@@ -160,7 +160,6 @@ export default function PatientHistory({ allRecords }: Props) {
                                     <td className="px-6 py-6 border-r border-[#D1D5DB]">
                                         <p className="text-[10px] font-bold text-[#6B7280] mb-1 uppercase tracking-tighter">Case Reference</p>
                                         <p className="text-[15px] font-bold text-[#1E3A8A] group-hover:underline underline-offset-4">{record.Patient_ID}</p>
-                                        <p className="text-[9px] text-[#6B7280] mt-1.5 font-mono">UID: {record.Assessment_ID || i}</p>
                                     </td>
                                     <td className="px-6 py-6 border-r border-[#D1D5DB]">
                                         <p className="text-[14px] font-bold text-black uppercase tracking-wide">{record.Child_Name}</p>
