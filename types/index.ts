@@ -5,23 +5,29 @@
 /** Category codes used in the VSMS assessment */
 export type CategoryCode = 'SHG' | 'SHE' | 'SHD' | 'SD' | 'OCC' | 'COM' | 'LOC' | 'SOC';
 
+/** Response types for each skill */
+export type ResponseType = 'YES' | 'NO' | 'NOT TESTED';
+
 /** Patient information collected in the form */
 export interface PatientInfo {
     childName: string;
     dob: string;
     age: string;
     gender: string;
-    ageLevel: string;
+    ageLevel: string; // This will become less central but kept for compatibility
     patientType: 'new' | 'existing';
     patientId: string;
+    therapistName: string;
 }
 
 /** A single assessment response for a skill */
 export interface AssessmentResponse {
+    id: number;
     skill: string;
     category: CategoryCode;
-    score: number;
-    achieved: boolean;
+    ageBlock: string;
+    weightage: number;
+    response: ResponseType;
 }
 
 /** Full submission payload sent to backend */
@@ -31,9 +37,12 @@ export interface AssessmentSubmission {
     age: string;
     gender: string;
     assessmentDate: string;
-    ageLevel: string;
     patientId: string;
+    therapistName: string;
+    assessmentId: string;
     responses: AssessmentResponse[];
+    domainTotals: Record<CategoryCode, number>;
+    overallTotal: number;
     timestamp?: string;
 }
 
@@ -42,7 +51,7 @@ export interface VSMSItem {
     id: number;
     skill: string;
     category: CategoryCode;
-    score: number;
+    score: number; // This is the weightage
 }
 
 /** A group of items belonging to a specific age level */
@@ -63,7 +72,8 @@ export interface AssessmentRecord {
     Age?: string;
     Gender?: string;
     Assessment_Date?: string;
-    Age_Level?: string;
+    Therapist_Name?: string;
+    Assessment_ID?: string;
     Vineland_Data_JSON?: string;
     SHG_Total?: number;
     SHE_Total?: number;
@@ -74,18 +84,6 @@ export interface AssessmentRecord {
     LOC_Total?: number;
     SOC_Total?: number;
     Grand_Total?: number;
-}
-
-/** Category totals computed from responses */
-export interface CategoryTotals {
-    SHG: number;
-    SHE: number;
-    SHD: number;
-    SD: number;
-    OCC: number;
-    COM: number;
-    LOC: number;
-    SOC: number;
 }
 
 /** Category display names */
@@ -103,7 +101,7 @@ export const CATEGORY_NAMES: Record<CategoryCode, string> = {
 /** All category codes in display order */
 export const CATEGORY_CODES: CategoryCode[] = ['SHG', 'SHE', 'SHD', 'SD', 'OCC', 'COM', 'LOC', 'SOC'];
 
-/** Age level options for the dropdown */
+/** Age level options - used for headings and metadata */
 export const AGE_LEVEL_OPTIONS = [
     { value: '0-1', label: '0–1' },
     { value: '2-3', label: 'II–III' },

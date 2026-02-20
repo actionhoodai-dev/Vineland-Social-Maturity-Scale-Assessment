@@ -1,14 +1,14 @@
 'use client';
 
-import { AssessmentResponse, CategoryCode, CATEGORY_CODES, CATEGORY_NAMES } from '@/types';
 import { useMemo } from 'react';
+import { AssessmentResponse, CategoryCode, CATEGORY_NAMES, CATEGORY_CODES } from '@/types';
 
 interface Props {
     responses: AssessmentResponse[];
 }
 
 /**
- * ScoreSummary — Live category totals and grand total
+ * ScoreSummary — Structured clinical score calculation and domain display
  */
 export default function ScoreSummary({ responses }: Props) {
     const { categoryTotals, grandTotal } = useMemo(() => {
@@ -18,9 +18,9 @@ export default function ScoreSummary({ responses }: Props) {
         let grand = 0;
 
         responses.forEach((r) => {
-            if (r.achieved) {
-                totals[r.category] += r.score;
-                grand += r.score;
+            if (r.response === 'YES') {
+                totals[r.category] += r.weightage;
+                grand += r.weightage;
             }
         });
 
@@ -28,34 +28,37 @@ export default function ScoreSummary({ responses }: Props) {
     }, [responses]);
 
     return (
-        <section className="bg-white border border-[#D1D5DB] p-4 md:p-5 mb-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-[#1E3A8A] uppercase tracking-wide pb-2 border-b-2 border-[#1E3A8A] mb-4">
-                Score Summary
+        <section className="bg-white border border-[#D1D5DB] p-6 mb-6">
+            <h3 className="text-[12px] font-bold text-black uppercase tracking-[0.2em] pb-3 border-b border-[#D1D5DB] mb-6">
+                Clinical Assessment Score Summary
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
                 {CATEGORY_CODES.map((cat) => (
-                    <div
-                        key={cat}
-                        className="flex justify-between items-center px-3 py-2 border border-[#D1D5DB] bg-white sm:bg-[#F9FAFB]"
-                    >
-                        <span className="text-[11px] font-bold text-[#374151] uppercase tracking-wider">
-                            {cat}:
+                    <div key={cat} className="flex justify-between items-center py-2 border-b border-[#F3F4F6]">
+                        <span className="text-[11px] font-bold text-black uppercase tracking-wider">
+                            {cat} ({CATEGORY_NAMES[cat]}):
                         </span>
-                        <span className="text-sm font-bold text-[#1E3A8A]">
+                        <span className="text-sm font-bold text-black">
                             {Number(categoryTotals[cat]).toFixed(1).replace(/\.0$/, '')}
                         </span>
                     </div>
                 ))}
 
                 {/* Grand Total */}
-                <div className="sm:col-span-2 lg:col-span-4 flex justify-between items-center px-4 py-3 bg-[#1E3A8A] mt-2">
-                    <span className="text-xs font-bold uppercase tracking-[0.1em] text-white">Grand Total Assessment Score:</span>
-                    <span className="text-lg font-bold text-white">
+                <div className="sm:col-span-2 lg:col-span-4 flex justify-between items-center px-6 py-4 bg-black mt-4">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">
+                        Grand Total Assessment Score Accumulation:
+                    </span>
+                    <span className="text-[20px] font-bold text-white">
                         {Number(grandTotal).toFixed(1).replace(/\.0$/, '')}
                     </span>
                 </div>
             </div>
+
+            <p className="mt-4 text-[10px] text-[#6B7280] italic">
+                NOTE: Score is calculated by accumulating weightage of skills marked as 'YES'. No psychological age adjustments applied.
+            </p>
         </section>
     );
 }

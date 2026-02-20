@@ -1,212 +1,175 @@
-/**
- * PDF Generator — Clinical Assessment Report
- * Uses jsPDF + jspdf-autotable
- */
-
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { AssessmentResponse, CATEGORY_CODES, CATEGORY_NAMES, CategoryCode } from '@/types';
-import { getAgeLevelLabel } from '@/utils/helpers';
-import { formatDateOnly, formatDateTime, formatDateForFile } from '@/utils/dateFormatter';
+import {
+    AssessmentSubmission,
+    CATEGORY_NAMES,
+    CATEGORY_CODES,
+    CategoryCode
+} from '@/types';
 
-interface PDFData {
-    childName: string;
-    dob: string;
-    age: string;
-    gender: string;
-    ageLevel: string;
-    assessmentDate: string;
-    patientId: string;
-    generatedPatientId?: string;
-    responses: AssessmentResponse[];
-}
+/**
+ * PDFGenerator — Professional Clinical Documentation Generator
+ */
+export const generateAssessmentPDF = (data: AssessmentSubmission) => {
+    const doc = new jsPDF();
 
-export function generateAssessmentPDF(data: PDFData): void {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
-    let y = 15;
+    // --- HELPER: DATE FORMATTING ---
+    const formatDateProfessional = (isoString: string) => {
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
+            }).replace(',', ' –');
+        } catch (e) {
+            return isoString;
+        }
+    };
 
-    // --- HEADER ---
+    const formattedDate = formatDateProfessional(data.assessmentDate);
+
+    // --- CLINIC HEADER ---
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('OCCUPATIONAL THERAPY FOUNDATION', pageWidth / 2, y, { align: 'center' });
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('36/7, AGILMEDU STREET \u2013 4', pageWidth / 2, y, { align: 'center' });
-    y += 4;
-    doc.text('SAIT COLONY, ERODE \u2013 638001', pageWidth / 2, y, { align: 'center' });
-    y += 8;
+    doc.setFontSize(18);
+    doc.text('OCCUPATIONAL THERAPY FOUNDATION', 105, 20, { align: 'center' });
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('VINELAND SOCIAL MATURITY SCALE', pageWidth / 2, y, { align: 'center' });
-    y += 5;
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('(Assessment Report)', pageWidth / 2, y, { align: 'center' });
-    y += 8;
+    doc.text('Erode, Tamil Nadu | Clinical Assessment Documentation System', 105, 26, { align: 'center' });
 
     doc.setDrawColor(0);
     doc.setLineWidth(0.5);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 6;
+    doc.line(20, 32, 190, 32);
 
-    // --- CHILD DETAILS ---
+    // --- PATIENT DOCUMENTATION SECTION ---
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('CHILD INFORMATION', margin, y);
-    y += 6;
+    doc.setFontSize(11);
+    doc.text('PATIENT RECORD DETAILS', 20, 42);
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-
-    const details: [string, string][] = [
-        ['Child Name', data.childName || 'N/A'],
-        ['Date of Birth', formatDateOnly(data.dob)],
-        ['Age', data.age ? `${data.age} years` : 'N/A'],
-        ['Gender', data.gender || 'N/A'],
-        ['Age Level', getAgeLevelLabel(data.ageLevel) || data.ageLevel || 'N/A'],
-        ['Assessment Date & Time', formatDateTime(data.assessmentDate)],
-        ['Patient ID', data.patientId || data.generatedPatientId || 'N/A'],
-    ];
-
-    details.forEach(([label, value]) => {
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${label}:`, margin, y);
-        doc.setFont('helvetica', 'normal');
-        doc.text(String(value), margin + 40, y);
-        y += 5;
+    autoTable(doc, {
+        startY: 45,
+        theme: 'plain',
+        body: [
+            ['Patient ID:', data.patientId, 'Assessment ID:', data.assessmentId || 'N/A'],
+            ['Child Name:', data.childName.toUpperCase(), 'Assessment Date:', formattedDate],
+            ['Date of Birth:', data.dob || 'Not Provided', 'Chronological Age:', data.age ? `${data.age} Years` : 'Not Provided'],
+            ['Gender:', (data.gender || 'Not Provided').toUpperCase(), 'Therapist Name:', (data.therapistName || 'Not Provided').toUpperCase()]
+        ],
+        styles: { fontSize: 9, cellPadding: 2, textColor: [0, 0, 0] },
+        columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 35 },
+            2: { fontStyle: 'bold', cellWidth: 35 }
+        },
+        margin: { left: 20 }
     });
 
-    y += 4;
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 6;
+    let y = (doc as any).lastAutoTable.finalY + 10;
 
-    // --- ASSESSMENT TABLE ---
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('ASSESSMENT ITEMS', margin, y);
-    y += 4;
-
-    const tableData = data.responses.map((r, i) => [
-        (i + 1).toString(),
-        r.skill || '',
-        r.category || '',
-        String(Number(r.score || 0).toFixed(1).replace(/\.0$/, '')),
-        r.achieved ? 'Yes' : 'No',
+    // --- SKILL TABLE ---
+    const tableBody = data.responses.map(r => [
+        r.ageBlock,
+        `#${r.id}`,
+        r.skill,
+        r.category,
+        Number(r.weightage).toFixed(1).replace(/\.0$/, ''),
+        r.response === 'YES' ? 'X' : '',
+        r.response === 'NO' ? 'X' : '',
+        r.response === 'NOT TESTED' ? 'X' : ''
     ]);
 
     autoTable(doc, {
         startY: y,
-        head: [['#', 'Skill', 'Category', 'Score', 'Achieved']],
-        body: tableData,
-        margin: { left: margin, right: margin },
-        styles: {
-            font: 'helvetica',
-            fontSize: 8,
-            cellPadding: 2,
-            lineColor: [0, 0, 0],
-            lineWidth: 0.2,
-            textColor: [0, 0, 0],
-        },
-        headStyles: {
-            fillColor: [30, 58, 138],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 8,
-        },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
+        head: [['AGE BLOCK', 'ID', 'SKILL DESCRIPTION', 'DOMAIN', 'WEIGHT', 'YES', 'NO', 'NT']],
+        body: tableBody,
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2, lineWidth: 0.1, textColor: [0, 0, 0], font: 'helvetica' },
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1 },
         columnStyles: {
-            0: { cellWidth: 10, halign: 'center' },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 20, halign: 'center' },
+            0: { fontStyle: 'bold', cellWidth: 20 },
+            1: { cellWidth: 10 },
+            2: { cellWidth: 85 },
             3: { cellWidth: 15, halign: 'center' },
-            4: { cellWidth: 20, halign: 'center' },
+            4: { cellWidth: 15, halign: 'center' },
+            5: { cellWidth: 12, halign: 'center' },
+            6: { cellWidth: 12, halign: 'center' },
+            7: { cellWidth: 12, halign: 'center' }
         },
+        margin: { left: 15, right: 15 }
     });
 
-    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable.finalY + 15;
 
-    if (y > 240) {
+    // --- SUMMARY TABLE ---
+    if (y > 230) {
         doc.addPage();
-        y = 15;
+        y = 20;
     }
 
-    // --- SCORE SUMMARY ---
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('SCORE SUMMARY', margin, y);
-    y += 4;
+    doc.setFontSize(11);
+    doc.text('DOMAIN-WISE SCORE ACCUMULATION SUMMARY', 20, y);
+    y += 5;
 
-    const scoreSummary: string[][] = [];
-    let grandTotal = 0;
-
-    CATEGORY_CODES.forEach((cat: CategoryCode) => {
-        let catTotal = 0;
-        data.responses.forEach((r) => {
-            if (r.category === cat && r.achieved) catTotal += r.score || 0;
-        });
-        scoreSummary.push([cat, CATEGORY_NAMES[cat] || cat, Number(catTotal).toFixed(1).replace(/\.0$/, '')]);
-        grandTotal += catTotal;
-    });
-
-    scoreSummary.push(['', 'Grand Total', Number(grandTotal).toFixed(1).replace(/\.0$/, '')]);
+    const summaryData = CATEGORY_CODES.map(cat => [
+        cat,
+        CATEGORY_NAMES[cat] || cat,
+        Number(data.domainTotals[cat] || 0).toFixed(1).replace(/\.0$/, '')
+    ]);
 
     autoTable(doc, {
         startY: y,
-        head: [['Code', 'Category', 'Score']],
-        body: scoreSummary,
-        margin: { left: margin, right: margin },
-        styles: {
-            font: 'helvetica',
-            fontSize: 9,
-            cellPadding: 2,
-            lineColor: [0, 0, 0],
-            lineWidth: 0.2,
-            textColor: [0, 0, 0],
-        },
-        headStyles: {
-            fillColor: [30, 58, 138],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-        },
+        head: [['CODE', 'DOMAIN DESCRIPTION', 'ACCUMULATED SCORE']],
+        body: summaryData,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 3, textColor: [0, 0, 0] },
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
         columnStyles: {
-            0: { cellWidth: 20, halign: 'center' },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 25, halign: 'center' },
+            0: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
+            2: { cellWidth: 45, halign: 'center', fontStyle: 'bold' }
         },
-        didParseCell(cellData) {
-            if (cellData.row.index === scoreSummary.length - 1 && cellData.section === 'body') {
-                cellData.cell.styles.fontStyle = 'bold';
-                cellData.cell.styles.fillColor = [240, 240, 240];
-            }
-        },
+        margin: { left: 45, right: 45 }
     });
 
-    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    y = (doc as any).lastAutoTable.finalY + 10;
 
-    if (y > 270) {
-        doc.addPage();
-        y = 15;
-    }
+    // --- GRAND TOTAL ---
+    doc.setFillColor(0, 0, 0);
+    doc.rect(45, y, 120, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('GRAND TOTAL ASSESSMENT SCORE:', 50, y + 8);
+    doc.text(Number(data.overallTotal).toFixed(1).replace(/\.0$/, ''), 155, y + 8, { align: 'right' });
+
+    // --- SIGNATURES ---
+    y += 35;
+    if (y > 270) { doc.addPage(); y = 40; }
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9);
+    doc.line(20, y, 70, y);
+    doc.text('Therapist Signature', 20, y + 5);
+    doc.text((data.therapistName || '_________________').toUpperCase(), 20, y + 10);
+
+    doc.line(140, y, 190, y);
+    doc.text('Clinical In-Charge', 140, y + 5);
+    doc.text('Occupational Therapy Foundation', 140, y + 10);
 
     // --- FOOTER ---
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 6;
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
+        doc.text('This is a computer-generated clinical report and requires professional interpretation.', 105, 290, { align: 'center' });
+    }
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    const now = new Date();
-    doc.text(`Generated on: ${formatDateTime(now)}`, margin, y);
-    y += 5;
-    doc.text('\u00A9 2026 Occupational Therapy Foundation \u2013 Erode', pageWidth / 2, y, {
-        align: 'center',
-    });
-
-    const childNameClean = (data.childName || 'Patient').replace(/\s+/g, '_');
-    doc.save(`VSMS_Assessment_${childNameClean}_${formatDateForFile(now)}.pdf`);
-}
+    // Save PDF
+    doc.save(`${data.patientId}_Assessment_${data.childName.replace(/\s+/g, '_')}.pdf`);
+};

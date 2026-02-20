@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PatientInfo, AGE_LEVEL_OPTIONS, AssessmentRecord } from '@/types';
+import { PatientInfo, AssessmentRecord } from '@/types';
 
 interface Props {
     patientInfo: PatientInfo;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * PatientInfoForm — Child information section with dynamic search for existing patients
+ * PatientInfoForm — Professional structured layout for patient details
  */
 export default function PatientInfoForm({ patientInfo, onChange, records }: Props) {
     const [nameSearch, setNameSearch] = useState('');
@@ -51,7 +51,7 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
             ...patientInfo,
             childName: p.Child_Name || '',
             patientId: p.Patient_ID || '',
-            dob: p.DOB ? new Date(p.DOB).toISOString().split('T')[0] : '', // Try to prepopulate DOB
+            dob: p.DOB ? new Date(p.DOB).toISOString().split('T')[0] : '',
             gender: p.Gender || '',
             age: p.Age || '',
         });
@@ -61,19 +61,22 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
         setShowNameSuggestions(false);
     };
 
+    const inputClasses = "w-full px-3 py-2 text-[14px] text-black bg-white border border-[#D1D5DB] rounded-none outline-none focus:border-black transition-all";
+    const labelClasses = "text-[11px] font-bold text-black uppercase tracking-wider mb-1 flex justify-between items-center";
+
     return (
-        <section className="bg-white border border-[#D1D5DB] p-4 md:p-5 mb-4 shadow-sm overflow-visible">
-            <h3 className="text-sm font-semibold text-[#1E3A8A] uppercase tracking-wide pb-2 border-b-2 border-[#1E3A8A] mb-4">
-                Child Information
+        <section className="bg-white border border-[#D1D5DB] p-6 mb-6 overflow-visible">
+            <h3 className="text-[12px] font-bold text-black uppercase tracking-[0.2em] pb-3 border-b border-[#D1D5DB] mb-6">
+                Patient Documentation Information
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
                 {/* Child Name */}
                 <div className="flex flex-col relative">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between items-center">
-                        <span>Child Name <span className="text-[#B91C1C]">*</span></span>
+                    <label className={labelClasses}>
+                        <span>Child Name *</span>
                         {patientInfo.patientType === 'existing' && patientInfo.childName && (
-                            <span className="text-[9px] text-[#1E3A8A] italic">Linked</span>
+                            <span className="text-[9px] text-black italic font-normal">Registered Record</span>
                         )}
                     </label>
                     <input
@@ -85,34 +88,34 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                             setShowNameSuggestions(true);
                         }}
                         onBlur={() => setShowNameSuggestions(false)}
-                        placeholder="Enter full name"
-                        className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] transition-all"
+                        placeholder="ENTER FULL NAME"
+                        className={inputClasses}
                     />
                     {showNameSuggestions && nameSuggestions.length > 0 && (
-                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5 max-h-60 overflow-y-auto">
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-black shadow-lg z-[100] mt-[-1px]">
                             {nameSuggestions.map((p, i) => (
                                 <div
                                     key={i}
                                     onMouseDown={(e) => {
-                                        e.preventDefault(); // Prevent input onBlur
+                                        e.preventDefault();
                                         handleSelectPatient(p);
                                     }}
-                                    className="px-3 py-2.5 hover:bg-[#1E3A8A] hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
+                                    className="px-3 py-2.5 hover:bg-black hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
                                 >
-                                    <p className="text-sm font-bold text-[#111827] group-hover:text-white">{p.Child_Name}</p>
-                                    <p className="text-[10px] text-[#6B7280] group-hover:text-white/80">ID: {p.Patient_ID}</p>
+                                    <p className="text-sm font-bold">{p.Child_Name}</p>
+                                    <p className="text-[10px] opacity-70">ID: {p.Patient_ID}</p>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Patient ID - Sequential */}
+                {/* Patient ID */}
                 <div className="flex flex-col relative">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5 flex justify-between items-center">
-                        <span>Patient ID <span className="text-[#B91C1C]">*</span></span>
+                    <label className={labelClasses}>
+                        <span>Patient ID *</span>
                         {patientInfo.patientType === 'existing' && patientInfo.patientId && (
-                            <span className="text-[9px] text-[#1E3A8A] italic">Linked</span>
+                            <span className="text-[9px] text-black italic font-normal">Linked</span>
                         )}
                     </label>
                     <input
@@ -126,152 +129,105 @@ export default function PatientInfoForm({ patientInfo, onChange, records }: Prop
                         onFocus={() => {
                             if (patientInfo.patientType === 'existing') {
                                 setShowIdSuggestions(true);
-                                setIdSearch(patientInfo.patientId); // Allow seeing suggestions for current ID if any
+                                setIdSearch(patientInfo.patientId);
                             }
                         }}
                         onBlur={() => setShowIdSuggestions(false)}
                         readOnly={patientInfo.patientType === 'new'}
-                        placeholder={patientInfo.patientType === 'new' ? "Generating..." : "Enter ID (e.g. VIN100)"}
-                        className={`w-full px-3 py-2.5 text-[14px] font-semibold border rounded-sm outline-none transition-all ${patientInfo.patientType === 'new'
-                            ? 'bg-[#F3F4F6] border-[#D1D5DB] text-[#1E3A8A]'
-                            : 'bg-white border-[#D1D5DB] text-[#111827] focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]'
-                            }`}
+                        placeholder={patientInfo.patientType === 'new' ? "SYSTEM GENERATED" : "ENTER ID"}
+                        className={`${inputClasses} font-bold ${patientInfo.patientType === 'new' ? 'bg-[#F9FAFB]' : ''}`}
                     />
                     {showIdSuggestions && idSuggestions.length > 0 && (
-                        <div className="absolute top-[100%] left-0 w-full bg-white border border-[#1E3A8A] shadow-lg z-[100] mt-0.5 max-h-60 overflow-y-auto">
+                        <div className="absolute top-[100%] left-0 w-full bg-white border border-black shadow-lg z-[100] mt-[-1px] max-h-60 overflow-y-auto">
                             {idSuggestions.map((p, i) => (
                                 <div
                                     key={i}
                                     onMouseDown={(e) => {
-                                        e.preventDefault(); // Prevent input onBlur
+                                        e.preventDefault();
                                         handleSelectPatient(p);
                                     }}
-                                    className="px-3 py-2.5 hover:bg-[#1E3A8A] hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
+                                    className="px-3 py-2.5 hover:bg-black hover:text-white cursor-pointer border-b border-[#D1D5DB] last:border-0 group transition-colors"
                                 >
-                                    <p className="text-sm font-bold text-[#111827] group-hover:text-white">{p.Patient_ID}</p>
-                                    <p className="text-[10px] text-[#6B7280] group-hover:text-white/80">Name: {p.Child_Name}</p>
+                                    <p className="text-sm font-bold">{p.Patient_ID}</p>
+                                    <p className="text-[10px] opacity-70">Name: {p.Child_Name}</p>
                                 </div>
                             ))}
                         </div>
                     )}
-                    {patientInfo.patientType === 'new' && (
-                        <span className="text-[10px] text-[#1E3A8A] mt-1 font-medium italic">Auto-calculated based on existing records</span>
-                    )}
+                </div>
+
+                {/* Therapist Name */}
+                <div className="flex flex-col">
+                    <label className={labelClasses}>
+                        <span>Therapist Name *</span>
+                    </label>
+                    <input
+                        type="text"
+                        value={patientInfo.therapistName}
+                        onChange={(e) => update('therapistName', e.target.value)}
+                        placeholder="ENTER THERAPIST NAME"
+                        className={inputClasses}
+                    />
                 </div>
 
                 {/* Date of Birth */}
                 <div className="flex flex-col">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
-                        Date of Birth
-                    </label>
+                    <label className={labelClasses}>Date of Birth</label>
                     <input
                         type="date"
                         value={patientInfo.dob}
                         onChange={(e) => update('dob', e.target.value)}
-                        className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                        className={inputClasses}
                     />
                 </div>
 
                 {/* Age */}
                 <div className="flex flex-col">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
-                        Age
-                    </label>
+                    <label className={labelClasses}>Chronological Age</label>
                     <input
                         type="number"
                         value={patientInfo.age}
                         onChange={(e) => update('age', e.target.value)}
-                        placeholder="Years"
-                        min={0}
-                        max={20}
-                        className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                        placeholder="YEARS"
+                        className={inputClasses}
                     />
                 </div>
 
                 {/* Gender */}
                 <div className="flex flex-col">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
-                        Gender
-                    </label>
+                    <label className={labelClasses}>Gender</label>
                     <select
                         value={patientInfo.gender}
                         onChange={(e) => update('gender', e.target.value)}
-                        className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-white border border-[#D1D5DB] rounded-sm outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                        className={inputClasses}
                     >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                {/* Age Level */}
-                <div className="flex flex-col">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1.5">
-                        Age Level <span className="text-[#B91C1C]">*</span>
-                    </label>
-                    <select
-                        value={patientInfo.ageLevel}
-                        onChange={(e) => update('ageLevel', e.target.value)}
-                        className="w-full px-3 py-2.5 text-[14px] text-[#111827] bg-[#FFFBEB] border-[#F59E0B] rounded-sm outline-none focus:ring-1 focus:ring-[#F59E0B]"
-                    >
-                        <option value="">Select Age Level</option>
-                        {AGE_LEVEL_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
+                        <option value="">SELECT GENDER</option>
+                        <option value="Male">MALE</option>
+                        <option value="Female">FEMALE</option>
+                        <option value="Other">OTHER</option>
                     </select>
                 </div>
 
                 {/* Patient Type */}
-                <div className="flex flex-col md:col-span-2 mt-2">
-                    <label className="text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-2">
-                        Admission Type <span className="text-[#B91C1C]">*</span>
+                <div className="flex flex-col md:col-span-3 mt-2">
+                    <label className="text-[11px] font-bold text-black uppercase tracking-wider mb-3">
+                        Documentation Type Identification *
                     </label>
-                    <div className="flex gap-4">
-                        <label className={`flex-1 flex items-center justify-center gap-3 p-3 border rounded-sm cursor-pointer transition-all ${patientInfo.patientType === 'new' ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white' : 'bg-white border-[#D1D5DB] text-[#374151] hover:border-[#1E3A8A]'}`}>
-                            <input
-                                type="radio"
-                                name="patientType"
-                                checked={patientInfo.patientType === 'new'}
-                                onChange={() => {
-                                    onChange({
-                                        childName: '',
-                                        patientId: '',
-                                        dob: '',
-                                        age: '',
-                                        gender: '',
-                                        ageLevel: patientInfo.ageLevel,
-                                        patientType: 'new'
-                                    });
-                                }}
-                                className="hidden"
-                            />
-                            <span className="text-[13px] font-bold uppercase tracking-wider">New Patient</span>
-                            {patientInfo.patientType === 'new' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                        </label>
-                        <label className={`flex-1 flex items-center justify-center gap-3 p-3 border rounded-sm cursor-pointer transition-all ${patientInfo.patientType === 'existing' ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white' : 'bg-white border-[#D1D5DB] text-[#374151] hover:border-[#1E3A8A]'}`}>
-                            <input
-                                type="radio"
-                                name="patientType"
-                                checked={patientInfo.patientType === 'existing'}
-                                onChange={() => {
-                                    onChange({
-                                        childName: '',
-                                        patientId: '',
-                                        dob: '',
-                                        age: '',
-                                        gender: '',
-                                        ageLevel: patientInfo.ageLevel,
-                                        patientType: 'existing'
-                                    });
-                                }}
-                                className="hidden"
-                            />
-                            <span className="text-[13px] font-bold uppercase tracking-wider">Existing</span>
-                            {patientInfo.patientType === 'existing' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                        </label>
+                    <div className="flex gap-0 border border-[#D1D5DB]">
+                        <button
+                            type="button"
+                            onClick={() => onChange({ ...patientInfo, patientType: 'new' })}
+                            className={`flex-1 py-3 text-[12px] font-bold uppercase tracking-widest transition-all ${patientInfo.patientType === 'new' ? 'bg-black text-white' : 'bg-white text-black hover:bg-[#F9FAFB]'}`}
+                        >
+                            New Patient Case
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onChange({ ...patientInfo, patientType: 'existing' })}
+                            className={`flex-1 py-3 text-[12px] font-bold uppercase tracking-widest border-l border-[#D1D5DB] transition-all ${patientInfo.patientType === 'existing' ? 'bg-black text-white' : 'bg-white text-black hover:bg-[#F9FAFB]'}`}
+                        >
+                            Existing Patient Record
+                        </button>
                     </div>
                 </div>
             </div>
