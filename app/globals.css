@@ -2,11 +2,12 @@
 
 :root {
   --background: #F3F4F6;
-  --foreground: #000000;
+  --foreground: #111827;
   --panel-bg: #FFFFFF;
-  --primary: #000000;
+  --primary: #1E3A8A;
+  /* Navy Blue */
   --border: #D1D5DB;
-  --secondary-text: #000000;
+  --secondary-text: #374151;
 }
 
 @theme inline {
@@ -19,7 +20,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -39,11 +40,11 @@ body {
 .section-title {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #000000;
+  color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #000000;
+  border-bottom: 2px solid var(--primary);
   margin-bottom: 1.5rem;
 }
 
@@ -51,11 +52,28 @@ body {
 button:focus,
 input:focus,
 select:focus {
-  outline: 2px solid #000000 !important;
+  outline: 2px solid var(--primary) !important;
   outline-offset: -1px;
 }
 
 /* Disable all transitions for a crisp enterprise feel */
 * {
   transition: none !important;
+}
+
+/* Custom Scrollbar for Navy Theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1a3278;
 }
