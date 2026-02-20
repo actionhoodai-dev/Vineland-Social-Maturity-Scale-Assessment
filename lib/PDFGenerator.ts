@@ -7,7 +7,7 @@ import {
 } from '@/types';
 
 /**
- * PDFGenerator — Authorized Institutional Performance Report
+ * PDFGenerator — Authorized Institutional Assessment Report
  */
 export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     const doc = new jsPDF();
@@ -39,11 +39,10 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
     doc.text('OCCUPATIONAL THERAPY FOUNDATION', 105, 20, { align: 'center' });
 
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(50, 50, 50);
-    doc.text('36/7, AGILMEDU STREET – 4, SAIT COLONY, ERODE – 638001 | TAMIL NADU, INDIA', 105, 26, { align: 'center' });
-    doc.text('Phone: +91 94437 12345 | Email: info@otfoundation.in', 105, 30, { align: 'center' });
+    doc.text('36/7, AGILMEDU STREET – 4, SAIT COLONY, ERODE – 638001 | TAMIL NADU, INDIA', 105, 28, { align: 'center' });
 
     doc.setDrawColor(navyColor[0], navyColor[1], navyColor[2]);
     doc.setLineWidth(1);
@@ -78,18 +77,16 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.text('PROGRESSIVE SKILL EVALUATION DATA', 15, y);
+    doc.text('COMPLETE SKILL EVALUATION ARCHIVE', 15, y);
     y += 5;
 
+    // Include ALL age blocks from the data
     const ageBlocks = Array.from(new Set(data.responses.map(r => r.ageBlock)));
 
     ageBlocks.forEach((blockName) => {
         const blockSkills = data.responses.filter(r => r.ageBlock === blockName);
 
-        // Show blocks that were evaluated
-        const hasEvaluated = blockSkills.some(r => r.response !== 'NOT TESTED');
-        if (!hasEvaluated) return;
-
+        // Header for Age Level Block
         autoTable(doc, {
             startY: y,
             theme: 'striped',
@@ -101,7 +98,7 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
         y = (doc as any).lastAutoTable.finalY;
 
         const tableBody = blockSkills.map(r => [
-            r.response === 'YES' ? 'Tick' : `${r.id}`, // Mark SR NO with Tick if YES
+            `${r.id}`, // Standard Serial Number
             r.skill,
             r.category,
             Number(r.weightage).toFixed(1).replace(/\.0$/, ''),
@@ -125,20 +122,6 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
                 4: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
                 5: { cellWidth: 12, halign: 'center' },
                 6: { cellWidth: 20, halign: 'center' }
-            },
-            didDrawCell: (data) => {
-                // If it's the S.NO column and the value is 'Tick', draw an actual tick
-                if (data.section === 'body' && data.column.index === 0 && data.cell.text[0] === 'Tick') {
-                    const cell = data.cell;
-                    const x = cell.x + cell.width / 2;
-                    const y = cell.y + cell.height / 2;
-                    doc.setDrawColor(navyColor[0], navyColor[1], navyColor[2]);
-                    doc.setLineWidth(0.4);
-                    // Draw tick mark
-                    doc.line(x - 1.5, y, x - 0.5, y + 1.2);
-                    doc.line(x - 0.5, y + 1.2, x + 2, y - 1.5);
-                    data.cell.text = ['']; // Clear the text
-                }
             },
             margin: { left: 15, right: 15 }
         });

@@ -197,8 +197,7 @@ export default function AssessmentPage() {
           <div className="flex items-center gap-3 group cursor-pointer" onClick={() => switchView('create')}>
             <div className="w-10 h-10 bg-white text-[#1E3A8A] flex items-center justify-center font-black text-xl shadow-inner border-2 border-white/20">V</div>
             <div className="flex flex-col">
-              <span className="text-[12px] font-black uppercase tracking-[0.3em] leading-none">VSMS Clinical Node</span>
-              <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-60 mt-1">Foundation Unit 1.2</span>
+              <span className="text-[14px] font-black uppercase tracking-[0.3em] leading-none">VSMS ASSESSMENT</span>
             </div>
           </div>
 
@@ -261,8 +260,8 @@ function NavBtn({ active, onClick, icon, label }: { active: boolean, onClick: ()
     <button
       onClick={onClick}
       className={`px-8 py-3 text-[11px] font-bold uppercase tracking-widest transition-all inline-flex items-center gap-2 border-2 ${active
-          ? 'bg-white text-[#1E3A8A] border-white shadow-lg'
-          : 'bg-transparent text-white border-transparent hover:bg-white/10'
+        ? 'bg-white text-[#1E3A8A] border-white shadow-lg'
+        : 'bg-transparent text-white border-transparent hover:bg-white/10'
         }`}
     >
       {icon} {label}

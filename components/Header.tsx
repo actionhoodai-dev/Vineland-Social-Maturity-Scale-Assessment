@@ -39,9 +39,6 @@ export default function Header() {
                     <div className="mt-2 text-[11px] md:text-[12px] font-bold tracking-wide uppercase text-[#1E3A8A] opacity-80">
                         <p>36/7, AGILMEDU STREET – 4 | SAIT COLONY</p>
                         <p>ERODE – 638001 | TAMIL NADU, INDIA</p>
-                        <p className="mt-1 border-t border-[#1E3A8A]/20 pt-1">
-                            PH: +91 94437 12345 | EMAIL: info@otfoundation.in
-                        </p>
                     </div>
                 </div>
 
