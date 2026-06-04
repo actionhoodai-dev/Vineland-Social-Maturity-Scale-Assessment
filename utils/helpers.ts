@@ -47,3 +47,52 @@ export function getAgeLevelLabel(key: string): string {
     };
     return map[key] || key;
 }
+
+/** Calculate the Malin VSMS credit for an item in months */
+export function getItemCreditInMonths(id: number): number {
+    if (id >= 1 && id <= 17) return 12 / 17;
+    if (id >= 18 && id <= 34) return 12 / 17;
+    if (id >= 35 && id <= 44) return 1.2;
+    if (id >= 45 && id <= 50) return 2.0;
+    if (id >= 51 && id <= 56) return 2.0;
+    if (id >= 57 && id <= 61) return 2.4;
+    if (id >= 62 && id <= 65) return 3.0;
+    if (id >= 66 && id <= 70) return 2.4;
+    if (id >= 71 && id <= 74) return 3.0;
+    if (id >= 75 && id <= 77) return 4.0;
+    if (id >= 78 && id <= 81) return 3.0;
+    if (id >= 82 && id <= 84) return 4.0;
+    if (id >= 85 && id <= 89) return 7.2;
+    return 0;
+}
+
+/** Calculate chronological age in months from Date of Birth and assessment date */
+export function calculateAgeInMonths(dobString: string, assessmentDateString?: string): number | null {
+    if (!dobString) return null;
+    const dob = new Date(dobString);
+    const refDate = assessmentDateString ? new Date(assessmentDateString) : new Date();
+    if (isNaN(dob.getTime())) return null;
+    
+    let months = (refDate.getFullYear() - dob.getFullYear()) * 12 + (refDate.getMonth() - dob.getMonth());
+    const dayDiff = refDate.getDate() - dob.getDate();
+    if (dayDiff < 0) {
+        months -= 1;
+        months += (30 + dayDiff) / 30;
+    } else {
+        months += dayDiff / 30;
+    }
+    return Math.max(0, months);
+}
+
+/** Get standard clinical classification based on Social Quotient (SQ) */
+export function getSQClassification(sq: number): string {
+    if (sq >= 120) return 'VERY SUPERIOR';
+    if (sq >= 110) return 'SUPERIOR';
+    if (sq >= 90) return 'AVERAGE';
+    if (sq >= 80) return 'LOW AVERAGE';
+    if (sq >= 70) return 'BORDERLINE';
+    if (sq >= 50) return 'MILD DEVELOPMENTAL DELAY';
+    if (sq >= 35) return 'MODERATE DEVELOPMENTAL DELAY';
+    if (sq >= 20) return 'SEVERE DEVELOPMENTAL DELAY';
+    return 'PROFOUND DEVELOPMENTAL DELAY';
+}

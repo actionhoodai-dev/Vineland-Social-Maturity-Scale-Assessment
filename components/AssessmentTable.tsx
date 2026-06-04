@@ -64,7 +64,7 @@ export default function AssessmentTable({ responses, onResponseChange }: Props) 
                                                         Domain: {skill.category}
                                                     </span>
                                                     <span className="text-[9px] font-bold text-[#1E3A8A] uppercase tracking-tighter">
-                                                        Weight: {Number(skill.weightage).toFixed(1).replace(/\.0$/, '')}
+                                                        Months: {Number(skill.weightage).toFixed(1).replace(/\.0$/, '')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -111,7 +111,7 @@ export default function AssessmentTable({ responses, onResponseChange }: Props) 
             <div className="px-6 py-4 bg-white border border-[#1E3A8A] flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-bold uppercase tracking-widest text-[#1E3A8A]">
                 <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-[#1E3A8A]"></span>
-                    <span>YES: Assigned Weight</span>
+                    <span>YES: Meets developmental month norm</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-white border border-[#1E3A8A]"></span>

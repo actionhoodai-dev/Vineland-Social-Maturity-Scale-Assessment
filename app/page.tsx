@@ -150,8 +150,15 @@ export default function AssessmentPage() {
       const assessmentId = `VSMS-${Date.now().toString().slice(-6)}`;
 
       const domainTotals: Record<CategoryCode, number> = { SHG: 0, SHE: 0, SHD: 0, SD: 0, OCC: 0, COM: 0, LOC: 0, SOC: 0 };
-      let overallTotal = 0;
-      responses.forEach(r => { if (r.response === 'YES') { domainTotals[r.category] += r.weightage; overallTotal += r.weightage; } });
+      
+      const CATEGORY_CODES: CategoryCode[] = ['SHG', 'SHE', 'SHD', 'SD', 'OCC', 'COM', 'LOC', 'SOC'];
+      CATEGORY_CODES.forEach(cat => {
+        const domainResponses = responses.filter(r => r.category === cat);
+        const lastYes = [...domainResponses].reverse().find(r => r.response === 'YES');
+        domainTotals[cat] = lastYes ? lastYes.weightage : 0;
+      });
+
+      const overallTotal = Object.values(domainTotals).reduce((sum, val) => sum + val, 0) / 8;
 
       const payload: AssessmentSubmission = {
         ...patientInfo,

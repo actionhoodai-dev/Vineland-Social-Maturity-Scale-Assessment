@@ -109,7 +109,7 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
 
         autoTable(doc, {
             startY: y,
-            head: [['S.NO', 'SKILL DESCRIPTION', 'DOMAIN', 'MARKS', 'YES', 'NO', 'NOT TESTED']],
+            head: [['S.NO', 'SKILL DESCRIPTION', 'DOMAIN', 'MONTHS', 'YES', 'NO', 'NOT TESTED']],
             body: tableBody,
             theme: 'grid',
             styles: { fontSize: 7, cellPadding: 2, lineWidth: 0.1, textColor: [0, 0, 0], font: 'helvetica' },
@@ -139,15 +139,19 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
     doc.text('DOMAIN-WISE PERFORMANCE SUMMARY', 20, y);
     y += 5;
 
-    const summaryData = CATEGORY_CODES.map(cat => [
-        cat,
-        CATEGORY_NAMES[cat] || cat,
-        Number(data.domainTotals[cat] || 0).toFixed(1).replace(/\.0$/, '')
-    ]);
+    const summaryData = CATEGORY_CODES.map(cat => {
+        const monthsVal = Number(data.domainTotals[cat] || 0);
+        const yearsVal = monthsVal / 12;
+        return [
+            cat,
+            CATEGORY_NAMES[cat] || cat,
+            `${monthsVal.toFixed(1).replace(/\.0$/, '')}m (${yearsVal.toFixed(2)}y)`
+        ];
+    });
 
     autoTable(doc, {
         startY: y,
-        head: [['CODE', 'DEVELOPMENTAL DOMAIN', 'CUMULATIVE SCORE']],
+        head: [['CODE', 'DEVELOPMENTAL DOMAIN', 'DOMAIN SOCIAL AGE']],
         body: summaryData,
         theme: 'grid',
         styles: { fontSize: 9, cellPadding: 3, textColor: [0, 0, 0] },
@@ -159,16 +163,7 @@ export const generateAssessmentPDF = (data: AssessmentSubmission) => {
         margin: { left: 45, right: 45 }
     });
 
-    y = (doc as any).lastAutoTable.finalY + 12;
 
-    // --- GRAND TOTAL ---
-    doc.setFillColor(navyColor[0], navyColor[1], navyColor[2]);
-    doc.rect(45, y, 120, 12, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL CUMULATIVE ASSESSMENT SCORE:', 50, y + 8);
-    doc.text(Number(data.overallTotal).toFixed(1).replace(/\.0$/, ''), 155, y + 8, { align: 'right' });
 
     // --- FOOTER ---
     const pageCount = (doc as any).internal.getNumberOfPages();
